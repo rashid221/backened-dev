@@ -10,7 +10,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded());
 app.use(cors());
-const PORT = process.env.PORT || 9002;
+const PORT = process.env.PORT || 3001;
 
 const JWT_SECRET = "sdjhgcbdshgcsfhdfsdsdsdssdcrrf454dfjgdhfg4dfdhk";
 
