@@ -2,8 +2,8 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
-import dotenv from 'dotenv';
-
+import dotenv from "dotenv";
+import crypto from "crypto";
 
 dotenv.config();
 const app = express();
@@ -15,13 +15,10 @@ const PORT = process.env.PORT || 3001;
 const JWT_SECRET = "sdjhgcbdshgcsfhdfsdsdsdssdcrrf454dfjgdhfg4dfdhk";
 
 mongoose
-  .connect(
-    process.env.MONGO_URL,
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
-  )
+  .connect(process.env.MONGO_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => {
     console.log("connection successful");
   })
@@ -41,6 +38,9 @@ const userSchema = new mongoose.Schema(
     WithdrawAmount: Number,
     StatusWithdraw: Boolean,
     ApprovedAmount: Boolean,
+    invited: String,
+    InviteCode: String,
+    invitePromo:Boolean,
   },
   {
     timestamps: true,
@@ -99,6 +99,7 @@ const paymentSchema = new mongoose.Schema(
     approvedpaymentamount: Boolean,
     numbers: Number,
     userId: String,
+    invitationflag:String,
   },
   {
     timestamps: true,
@@ -660,28 +661,44 @@ app.post("/register", (req, res) => {
     WithdrawAmount,
     StatusWithdraw,
     ApprovedAmount,
+    invited,
+    invitePromo,
   } = req.body;
   User.findOne({ number: number }).then((user) => {
     if (user) {
       res.send({ message: "User already registered" });
     } else {
-      const user = new User({
-        name,
-        number,
-        password,
-        UserType,
-        Balance,
-        AccountHolder,
-        BankName,
-        ifscCode,
-        AccountNumber,
-        WithdrawAmount,
-        StatusWithdraw,
-        ApprovedAmount,
+      User.find({ InviteCode: invited }).then((regist) => {
+        const invitedata = regist.map((item) => item.InviteCode);
+        if (invitedata.toString() === invited) {
+          const randomCode = crypto
+            .randomBytes(3)
+            .toString("hex")
+            .toUpperCase();
+          const user = new User({
+            name,
+            number,
+            password,
+            UserType,
+            Balance,
+            AccountHolder,
+            BankName,
+            ifscCode,
+            AccountNumber,
+            WithdrawAmount,
+            StatusWithdraw,
+            ApprovedAmount,
+            invited,
+            InviteCode: randomCode,
+            invitePromo,
+          });
+          user.save(
+            res.send({ message: "Registered Successfully, Please Login now" })
+          );
+        } else {
+          res.send({ message: "Referal code not valid" });
+        }
       });
-      user.save(
-        res.send({ message: "Registered Successfully, Please Login now" })
-      );
     }
   });
 });
@@ -968,6 +985,7 @@ app.post("/rechargerequest", (req, res) => {
     approvedpaymentamount,
     numbers,
     userId,
+    invitationflag,
   } = req.body;
   const paymentuser = new PaymentUser({
     paymentamount,
@@ -976,6 +994,7 @@ app.post("/rechargerequest", (req, res) => {
     approvedpaymentamount,
     numbers,
     userId,
+    invitationflag,
   });
   paymentuser.save(res.send({ message: "Recharge Requested" }));
 });
@@ -1047,6 +1066,31 @@ app.post("/approvedrequest", (req, res) => {
 
 app.post("/paymentsrequest", (req, res) => {
   const { userId, approvedAmount } = req.body;
+  User.find({_id:userId}).then((actpromo)=>{
+    const promoAll = actpromo.map((item)=>item.invited);
+    const promoAllBool = actpromo.map((item)=>item.invitePromo);
+     const promoAllOne = promoAll[0];
+     const promoAllBoolTwo = promoAllBool[0];
+
+    // console.log("promo", approvedAmount ,typeof promoAllOne, typeof promoAllBoolTwo);
+
+  
+    if(promoAllBoolTwo === true && approvedAmount >= 500){
+      console.log("trigger");
+    User.updateOne(
+    {
+      InviteCode:promoAllOne
+    },
+    {
+      $inc: { Balance: 120 }
+    },
+   ).then((hello)=>console.log(hello));
+
+  User.updateOne( { _id: userId },
+    { $set: { invitePromo: false } },).then((hellows)=>console.log(hellows));  
+  }
+ })
+  
   User.find({ _id: userId }).then((act) => {
     const walzBalance = act.map((ite) => ite.Balance);
     User.updateOne(
@@ -1057,7 +1101,7 @@ app.post("/paymentsrequest", (req, res) => {
         },
       }
     ).then((user) => {
-      res.send({ message: "Withdraw approved" });
+      res.send({ message: "recharge done" });
     });
     PaymentUser.deleteOne({ userId: userId }).then((deleted) => {});
   });
@@ -1084,5 +1128,5 @@ app.post("/confirmpassword", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log("BE started at port 9002");
+  console.log("BE started at port 3001");
 });
