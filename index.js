@@ -76,6 +76,24 @@ const colorSchema = new mongoose.Schema(
   }
 );
 
+const coloredSchema = new mongoose.Schema(
+  {
+    totalmoneys: Number,
+    userId: String,
+    agrees: Boolean,
+    colors: String,
+    usernumber: Number,
+    userAid: String,
+    username: String,
+    currentPer:Number,
+    WinningFlag:Boolean,
+    entryTime: String,
+  },
+  {
+    timestamps: true,
+  }
+);
+
 const colornumberSchema = new mongoose.Schema(
   {
     totalmoneytwo: Number,
@@ -85,6 +103,23 @@ const colornumberSchema = new mongoose.Schema(
     usernumbertwo: Number,
     userAidtwo: String,
     usernametwo: String,
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const colornumberedSchema = new mongoose.Schema(
+  {
+    totalmoneytwo: Number,
+    numberstwo: Number,
+    agreestwo: Boolean,
+    colorstwo: String,
+    usernumbertwo: Number,
+    userAidtwo: String,
+    usernametwo: String,
+    currentPer:Number,
+    WinningFlag:Boolean,
   },
   {
     timestamps: true,
@@ -120,6 +155,24 @@ const sizeSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+const sizedSchema = new mongoose.Schema(
+  {
+    totalmoneythree: Number,
+    sizethree: String,
+    agreesthree: String,
+    colorsthree: String,
+    usernumberthree: Number,
+    userAidthree: String,
+    usernamethree: String,
+    WinningFlag:Boolean,
+    currentPer:Number,
+  },
+  {
+    timestamps: true,
+  }
+);
+
 
 const withdrawrecordSchema = new mongoose.Schema(
   {
@@ -169,12 +222,23 @@ const ActiveUser = new mongoose.model("ActiveUser", activeSchema);
 
 const ColorUser = new mongoose.model("ColorUser", colorSchema);
 
+const ColoredUser = new mongoose.model("ColoredUser", coloredSchema);
+
 const ColorNumberUser = new mongoose.model(
   "ColorNumberUser",
   colornumberSchema
 );
 
+const ColorNumberedUser = new mongoose.model(
+  "ColorNumberedUser",
+  colornumberedSchema
+);
+
+
 const SizeUser = new mongoose.model("SizeUser", sizeSchema);
+
+const SizedUser = new mongoose.model("SizedUser", sizedSchema);
+
 
 const DateUser = new mongoose.model("DateUser", dateSchema);
 
@@ -352,7 +416,7 @@ async function task1() {
                     winnerdata3
                   );
                   const year = currentTime.getFullYear().toString();
-                  const month = ("0" + (currentTime.getMonth() + 1)).slice(-2); // Months are 0-based
+                  const month = ("0" + (currentTime.getMonth() + 1)).slice(-2); 
                   const day = ("0" + currentTime.getDate()).slice(-2);
                   const convertedDate = year + month + day;
 
@@ -511,9 +575,7 @@ app.get("/timertime", (req, res) => {
 });
 
 app.get("/perioduserlist", (req, res) => {
-  ChampUser.find({})
-    .sort({ periodchamp: -1 })
-    .then((champuser) => {
+  ChampUser.find({}).then((champuser) => {
       res.send({ message: "period data fetched", champuser: champuser });
     });
 });
@@ -527,8 +589,10 @@ app.post("/usercolor", (req, res) => {
     usernumber,
     userAid,
     username,
+    currentPer,
     entryTime,
   } = req.body;
+  
   const entryTimeLimit = 3 * 60 * 1000;
   console.log(entryTimeLimit);
   console.log(entryTime - currentTime);
@@ -536,7 +600,7 @@ app.post("/usercolor", (req, res) => {
     res.send({ message: "Period Settled" });
   } else {
     ColorUser.find({}).then((coloruser) => {
-      coloruser = new ColorUser({
+        coloruser = new ColorUser({
         totalmoneys,
         userId,
         agrees,
@@ -553,6 +617,21 @@ app.post("/usercolor", (req, res) => {
         })
       );
     });
+    ColoredUser.find({}).then((coloreduser) => {
+      coloreduser = new ColoredUser({
+        totalmoneys,
+        userId,
+        agrees,
+        colors,
+        usernumber,
+        userAid,
+        username,
+        currentPer,
+        WinningFlag:false,
+         entryTime,
+      });
+      coloreduser.save();
+    });
   }
 });
 
@@ -565,6 +644,7 @@ app.post("/usernumbercolor", (req, res) => {
     usernumbertwo,
     userAidtwo,
     usernametwo,
+    currentPer,
     entryTime,
   } = req.body;
   const entryTimeLimit = 3 * 60 * 1000;
@@ -587,6 +667,20 @@ app.post("/usernumbercolor", (req, res) => {
         res.send({ message: "Your number selected successfully" })
       );
     });
+    ColorNumberedUser.find({}).then((colornumbereduser) => {
+      colornumbereduser = new ColorNumberedUser({
+        totalmoneytwo,
+        numberstwo,
+        agreestwo,
+        colorstwo,
+        usernumbertwo,
+        userAidtwo,
+        usernametwo,
+        currentPer,
+        WinningFlag:false,
+      });
+      colornumbereduser.save();
+    });
   }
 });
 
@@ -599,6 +693,7 @@ app.post("/usernumbersize", (req, res) => {
     usernumberthree,
     userAidthree,
     usernamethree,
+    currentPer,
     entryTime,
   } = req.body;
   const entryTimeLimit = 3 * 60 * 1000;
@@ -619,8 +714,24 @@ app.post("/usernumbersize", (req, res) => {
       });
       sizeuser.save(res.send({ message: "Your color size successfully" }));
     });
+    SizedUser.find({}).then((sizeduser) => {
+      sizeduser = new SizedUser({
+        totalmoneythree,
+        sizethree,
+        agreesthree,
+        colorsthree,
+        usernumberthree,
+        userAidthree,
+        usernamethree,
+        currentPer,
+        WinningFlag:false,
+      });
+      sizeduser.save();
+    });
   }
 });
+
+ 
 
 app.post("/login", (req, res) => {
   const { number, password } = req.body;
@@ -729,6 +840,22 @@ app.get("/usernumbercolor", (req, res) => {
     });
   });
 });
+
+app.get("/periodwinlist", (req, res) => {
+  ColoredUser.find({}).then((coloreduser) => {
+    ColorNumberedUser.find({}).then((colornumbereduser)=>{
+      SizedUser.find({}).then((sizeduser)=>{
+        const allperiodwin = {
+          coloreduser:coloreduser,
+          colornumbereduser:colornumbereduser,
+          sizeduser:sizeduser,
+        }
+        res.send({message:"all data fetched",allperiodwin:allperiodwin});
+      })
+    })
+  });
+});
+
 
 app.get("/usernumbersize", (req, res) => {
   SizeUser.find({}).then((sizeuser) => {
@@ -1072,9 +1199,7 @@ app.post("/paymentsrequest", (req, res) => {
      const promoAllOne = promoAll[0];
      const promoAllBoolTwo = promoAllBool[0];
 
-    // console.log("promo", approvedAmount ,typeof promoAllOne, typeof promoAllBoolTwo);
-
-  
+     
     if(promoAllBoolTwo === true && approvedAmount >= 500){
       console.log("trigger");
     User.updateOne(
@@ -1126,6 +1251,7 @@ app.post("/confirmpassword", (req, res) => {
     }
   });
 });
+
 
 app.listen(PORT, () => {
   console.log("BE started at port 3001");
