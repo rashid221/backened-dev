@@ -85,7 +85,7 @@ const coloredSchema = new mongoose.Schema(
     usernumber: Number,
     userAid: String,
     username: String,
-    currentPer:Number,
+    currentPer:String,
     WinningFlag:Boolean,
     entryTime: String,
   },
@@ -118,7 +118,7 @@ const colornumberedSchema = new mongoose.Schema(
     usernumbertwo: Number,
     userAidtwo: String,
     usernametwo: String,
-    currentPer:Number,
+    currentPer:String,
     WinningFlag:Boolean,
   },
   {
@@ -166,7 +166,7 @@ const sizedSchema = new mongoose.Schema(
     userAidthree: String,
     usernamethree: String,
     WinningFlag:Boolean,
-    currentPer:Number,
+    currentPer:String,
   },
   {
     timestamps: true,
@@ -515,8 +515,9 @@ async function task1() {
                       numberchamp: winnerdata1.selected,
                       bigchamp: winnerdata3.selected,
                     });
+                   champuser.save();
+                    
 
-                    champuser.save();
                   });
                 });
               });
@@ -578,7 +579,41 @@ app.get("/perioduserlist", (req, res) => {
   ChampUser.find({}).then((champuser) => {
       res.send({ message: "period data fetched", champuser: champuser });
     });
-});
+    ChampUser.find({}).then((allcham)=>{
+      const allchampcolor = allcham.map((item)=>item.colorchamp);
+      const allchampperiod = allcham.map((item)=>item.periodchamp);
+
+      ColoredUser.updateOne(
+        { colors: allchampcolor,
+          currentPer:allchampperiod
+        },
+        { $set: { WinningFlag: true } }
+      ).then(() => console.log("updated"));
+    })
+
+    ChampUser.find({}).then((allcham)=>{
+      const allchampnumber = allcham.map((item)=>item.numberchamp);
+      const allchampperiod = allcham.map((item)=>item.periodchamp);
+      ColorNumberedUser.updateOne(
+        { numberstwo: allchampnumber,
+          currentPer:allchampperiod
+        },
+        { $set: { WinningFlag: true } }
+      ).then(() => console.log("updated"));
+    })
+
+    ChampUser.find({}).then((allcham)=>{
+      const allchampsize = allcham.map((item)=>item.bigchamp);
+      const allchampperiod = allcham.map((item)=>item.periodchamp);
+      SizedUser.updateOne(
+        { sizethree: allchampsize,
+          currentPer:allchampperiod
+        },
+        { $set: { WinningFlag: true } }
+      ).then(() => console.log("updated"));
+    })
+    
+   });
 
 app.post("/usercolor", (req, res) => {
   const {
@@ -854,6 +889,7 @@ app.get("/periodwinlist", (req, res) => {
       })
     })
   });
+             
 });
 
 
