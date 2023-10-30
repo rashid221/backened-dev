@@ -40,7 +40,7 @@ const userSchema = new mongoose.Schema(
     ApprovedAmount: Boolean,
     invited: String,
     InviteCode: String,
-    invitePromo:Boolean,
+    invitePromo: Boolean,
   },
   {
     timestamps: true,
@@ -85,8 +85,8 @@ const coloredSchema = new mongoose.Schema(
     usernumber: Number,
     userAid: String,
     username: String,
-    currentPer:String,
-    WinningFlag:Boolean,
+    currentPer: String,
+    WinningFlag: Boolean,
     entryTime: String,
   },
   {
@@ -118,8 +118,8 @@ const colornumberedSchema = new mongoose.Schema(
     usernumbertwo: Number,
     userAidtwo: String,
     usernametwo: String,
-    currentPer:String,
-    WinningFlag:Boolean,
+    currentPer: String,
+    WinningFlag: Boolean,
   },
   {
     timestamps: true,
@@ -134,7 +134,7 @@ const paymentSchema = new mongoose.Schema(
     approvedpaymentamount: Boolean,
     numbers: Number,
     userId: String,
-    invitationflag:String,
+    invitationflag: String,
   },
   {
     timestamps: true,
@@ -165,14 +165,13 @@ const sizedSchema = new mongoose.Schema(
     usernumberthree: Number,
     userAidthree: String,
     usernamethree: String,
-    WinningFlag:Boolean,
-    currentPer:String,
+    WinningFlag: Boolean,
+    currentPer: String,
   },
   {
     timestamps: true,
   }
 );
-
 
 const withdrawrecordSchema = new mongoose.Schema(
   {
@@ -234,11 +233,9 @@ const ColorNumberedUser = new mongoose.model(
   colornumberedSchema
 );
 
-
 const SizeUser = new mongoose.model("SizeUser", sizeSchema);
 
 const SizedUser = new mongoose.model("SizedUser", sizedSchema);
-
 
 const DateUser = new mongoose.model("DateUser", dateSchema);
 
@@ -416,7 +413,7 @@ async function task1() {
                     winnerdata3
                   );
                   const year = currentTime.getFullYear().toString();
-                  const month = ("0" + (currentTime.getMonth() + 1)).slice(-2); 
+                  const month = ("0" + (currentTime.getMonth() + 1)).slice(-2);
                   const day = ("0" + currentTime.getDate()).slice(-2);
                   const convertedDate = year + month + day;
 
@@ -481,8 +478,7 @@ async function task1() {
                     (colornumberId) => {
                       for (const obj of colornumberId) {
                         const { userAidtwo, totalmoneytwo } = obj;
-
-                        User.find({ _id: userAidtwo }).then(
+                          User.find({ _id: userAidtwo }).then(
                           (getcolornumberuser) => {
                             if (getcolornumberuser) {
                               getcolornumberuser.map((item) => {
@@ -507,18 +503,33 @@ async function task1() {
                       }
                     }
                   );
+                 
+                  if(winnerdata1.WinningAmount === 0 || winnerdata2.WinningAmount === 0 || winnerdata3.WinningAmount === 0){
+                    console.log(winnerdata1.WinningAmount === 0)
+                    let colorz = ["red","violet","green"];
+                    let selectedColor;
+                    let randomIndex = Math.floor(Math.random()*colorz.length);
+                    selectedColor = colorz[randomIndex];
+                    let numberz = [0,1,2,3,4,5,6,7,8,9];
+                    let selectedNumber;
+                    let randomIndexnum = Math.floor(Math.random()*numberz.length);
+                    selectedNumber = numberz[randomIndexnum];
+                    let bigz = ["small","big"];
+                    let selectedNow;
+                    let randomIndexbig = Math.floor(Math.random()*bigz.length);
+                    selectedNow = bigz[randomIndexbig];
 
                   ChampUser.find({}).then((champuser) => {
                     champuser = new ChampUser({
                       periodchamp: `${convertedDate}` + counter,
-                      colorchamp: winnerdata2.selected,
-                      numberchamp: winnerdata1.selected,
-                      bigchamp: winnerdata3.selected,
+                      colorchamp: winnerdata2.WinningAmount===0 ? selectedColor : winnerdata2.selected,
+                      numberchamp: winnerdata1.WinningAmount===0 ? selectedNumber : winnerdata1.selected,
+                      bigchamp: winnerdata3.WinningAmount===0 ? selectedNow : winnerdata3.selected,
                     });
-                   champuser.save();
-                    
-
+                    champuser.save();
                   });
+                  }
+               
                 });
               });
             });
@@ -572,24 +583,21 @@ app.get("/timertime", (req, res) => {
     counter: `${convertedDate}` + counter,
   };
   res.send({ message: "color data fetched", currenttimedata });
-  console.log(currenttimedata);
 });
 
 app.get("/perioduserlist", (req, res) => {
   ChampUser.find({}).then((champuser) => {
-      res.send({ message: "period data fetched", champuser: champuser });
-    });
-    ChampUser.find({}).then((allcham)=>{
-      const allchampcolor = allcham.map((item)=>item.colorchamp);
-      const allchampperiod = allcham.map((item)=>item.periodchamp);
-
+    res.send({ message: "period data fetched", champuser: champuser });
+  
+    ChampUser.find({}).then((allcham) => {
+      const allchampcolor = allcham.map((item) => item.colorchamp);
+      const allchampperiod = allcham.map((item) => item.periodchamp);
       ColoredUser.updateOne(
-        { colors: allchampcolor,
-          currentPer:allchampperiod
-        },
+        { colors: allchampcolor, currentPer: allchampperiod },
         { $set: { WinningFlag: true } }
-      ).then(() => console.log("updated"));
+      ).then((hellos) => console.log("updated", hellos));
     })
+ 
 
     ChampUser.find({}).then((allcham)=>{
       const allchampnumber = allcham.map((item)=>item.numberchamp);
@@ -612,8 +620,9 @@ app.get("/perioduserlist", (req, res) => {
         { $set: { WinningFlag: true } }
       ).then(() => console.log("updated"));
     })
-    
-   });
+});
+});
+
 
 app.post("/usercolor", (req, res) => {
   const {
@@ -627,7 +636,7 @@ app.post("/usercolor", (req, res) => {
     currentPer,
     entryTime,
   } = req.body;
-  
+
   const entryTimeLimit = 3 * 60 * 1000;
   console.log(entryTimeLimit);
   console.log(entryTime - currentTime);
@@ -635,7 +644,7 @@ app.post("/usercolor", (req, res) => {
     res.send({ message: "Period Settled" });
   } else {
     ColorUser.find({}).then((coloruser) => {
-        coloruser = new ColorUser({
+      coloruser = new ColorUser({
         totalmoneys,
         userId,
         agrees,
@@ -662,8 +671,8 @@ app.post("/usercolor", (req, res) => {
         userAid,
         username,
         currentPer,
-        WinningFlag:false,
-         entryTime,
+        WinningFlag: false,
+        entryTime,
       });
       coloreduser.save();
     });
@@ -712,7 +721,7 @@ app.post("/usernumbercolor", (req, res) => {
         userAidtwo,
         usernametwo,
         currentPer,
-        WinningFlag:false,
+        WinningFlag: false,
       });
       colornumbereduser.save();
     });
@@ -759,14 +768,12 @@ app.post("/usernumbersize", (req, res) => {
         userAidthree,
         usernamethree,
         currentPer,
-        WinningFlag:false,
+        WinningFlag: false,
       });
       sizeduser.save();
     });
   }
 });
-
- 
 
 app.post("/login", (req, res) => {
   const { number, password } = req.body;
@@ -878,20 +885,18 @@ app.get("/usernumbercolor", (req, res) => {
 
 app.get("/periodwinlist", (req, res) => {
   ColoredUser.find({}).then((coloreduser) => {
-    ColorNumberedUser.find({}).then((colornumbereduser)=>{
-      SizedUser.find({}).then((sizeduser)=>{
+    ColorNumberedUser.find({}).then((colornumbereduser) => {
+      SizedUser.find({}).then((sizeduser) => {
         const allperiodwin = {
-          coloreduser:coloreduser,
-          colornumbereduser:colornumbereduser,
-          sizeduser:sizeduser,
-        }
-        res.send({message:"all data fetched",allperiodwin:allperiodwin});
-      })
-    })
+          coloreduser: coloreduser,
+          colornumbereduser: colornumbereduser,
+          sizeduser: sizeduser,
+        };
+        res.send({ message: "all data fetched", allperiodwin: allperiodwin });
+      });
+    });
   });
-             
 });
-
 
 app.get("/usernumbersize", (req, res) => {
   SizeUser.find({}).then((sizeuser) => {
@@ -1229,29 +1234,29 @@ app.post("/approvedrequest", (req, res) => {
 
 app.post("/paymentsrequest", (req, res) => {
   const { userId, approvedAmount } = req.body;
-  User.find({_id:userId}).then((actpromo)=>{
-    const promoAll = actpromo.map((item)=>item.invited);
-    const promoAllBool = actpromo.map((item)=>item.invitePromo);
-     const promoAllOne = promoAll[0];
-     const promoAllBoolTwo = promoAllBool[0];
+  User.find({ _id: userId }).then((actpromo) => {
+    const promoAll = actpromo.map((item) => item.invited);
+    const promoAllBool = actpromo.map((item) => item.invitePromo);
+    const promoAllOne = promoAll[0];
+    const promoAllBoolTwo = promoAllBool[0];
 
-     
-    if(promoAllBoolTwo === true && approvedAmount >= 500){
+    if (promoAllBoolTwo === true && approvedAmount >= 500) {
       console.log("trigger");
-    User.updateOne(
-    {
-      InviteCode:promoAllOne
-    },
-    {
-      $inc: { Balance: 120 }
-    },
-   ).then((hello)=>console.log(hello));
+      User.updateOne(
+        {
+          InviteCode: promoAllOne,
+        },
+        {
+          $inc: { Balance: 120 },
+        }
+      ).then((hello) => console.log(hello));
 
-  User.updateOne( { _id: userId },
-    { $set: { invitePromo: false } },).then((hellows)=>console.log(hellows));  
-  }
- })
-  
+      User.updateOne({ _id: userId }, { $set: { invitePromo: false } }).then(
+        (hellows) => console.log(hellows)
+      );
+    }
+  });
+
   User.find({ _id: userId }).then((act) => {
     const walzBalance = act.map((ite) => ite.Balance);
     User.updateOne(
@@ -1288,7 +1293,6 @@ app.post("/confirmpassword", (req, res) => {
   });
 });
 
-
 app.listen(PORT, () => {
-  console.log("BE started at port 3001");
+  console.log("BE started at port 3002");
 });
